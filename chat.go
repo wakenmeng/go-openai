@@ -237,8 +237,15 @@ const (
 )
 
 type Tool struct {
-	Type     ToolType            `json:"type"`
-	Function *FunctionDefinition `json:"function,omitempty"`
+	Type      ToolType             `json:"type"`
+	Function  *FunctionDefinition  `json:"function,omitempty"`
+	WebSearch *WebSearchDefinition `json:"web_search,omitempty"`
+}
+
+type WebSearchDefinition struct {
+	Enable       bool   `json:"enable"`
+	SearchQuery  string `json:"search_query"`
+	SearchResult bool   `json:"search_result"`
 }
 
 type ToolChoice struct {
