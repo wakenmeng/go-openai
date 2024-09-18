@@ -236,7 +236,7 @@ type ChatCompletionRequest struct {
 	StreamOptions *StreamOptions `json:"stream_options,omitempty"`
 	// Disable the default behavior of parallel tool calls by setting it: false.
 	ParallelToolCalls  any `json:"parallel_tool_calls,omitempty"`
-	SensitiveWordCheck any `json:"sensitive_word_check"`
+	SensitiveWordCheck any `json:"sensitive_word_check,omitempty"`
 }
 
 type StreamOptions struct {
