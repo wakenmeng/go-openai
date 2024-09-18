@@ -17,6 +17,10 @@ var (
 // GPT3 Models are designed for text-based tasks. For code-specific
 // tasks, please refer to the Codex series of models.
 const (
+	O1Mini                = "o1-mini"
+	O1Mini20240912        = "o1-mini-2024-09-12"
+	O1Preview             = "o1-preview"
+	O1Preview20240912     = "o1-preview-2024-09-12"
 	GPT432K0613           = "gpt-4-32k-0613"
 	GPT432K0314           = "gpt-4-32k-0314"
 	GPT432K               = "gpt-4-32k"
@@ -24,6 +28,8 @@ const (
 	GPT40314              = "gpt-4-0314"
 	GPT4o                 = "gpt-4o"
 	GPT4o20240513         = "gpt-4o-2024-05-13"
+	GPT4o20240806         = "gpt-4o-2024-08-06"
+	GPT4oLatest           = "chatgpt-4o-latest"
 	GPT4oMini             = "gpt-4o-mini"
 	GPT4oMini20240718     = "gpt-4o-mini-2024-07-18"
 	GPT4Turbo             = "gpt-4-turbo"
@@ -81,6 +87,10 @@ const (
 
 var disabledModelsForEndpoints = map[string]map[string]bool{
 	"/completions": {
+		O1Mini:               true,
+		O1Mini20240912:       true,
+		O1Preview:            true,
+		O1Preview20240912:    true,
 		GPT3Dot5Turbo:        true,
 		GPT3Dot5Turbo0301:    true,
 		GPT3Dot5Turbo0613:    true,
@@ -91,6 +101,8 @@ var disabledModelsForEndpoints = map[string]map[string]bool{
 		GPT4:                 true,
 		GPT4o:                true,
 		GPT4o20240513:        true,
+		GPT4o20240806:        true,
+		GPT4oLatest:          true,
 		GPT4oMini:            true,
 		GPT4oMini20240718:    true,
 		GPT4TurboPreview:     true,
@@ -136,25 +148,26 @@ func checkPromptType(prompt any) bool {
 
 // CompletionRequest represents a request structure for completion API.
 type CompletionRequest struct {
-	Model            string   `json:"model"`
-	Prompt           any      `json:"prompt,omitempty"`
-	Suffix           string   `json:"suffix,omitempty"`
-	MaxTokens        int      `json:"max_tokens,omitempty"`
-	Temperature      float32  `json:"temperature,omitempty"`
-	TopP             float32  `json:"top_p,omitempty"`
-	N                int      `json:"n,omitempty"`
-	Stream           bool     `json:"stream,omitempty"`
-	LogProbs         int      `json:"logprobs,omitempty"`
-	Echo             bool     `json:"echo,omitempty"`
-	Stop             []string `json:"stop,omitempty"`
-	PresencePenalty  float32  `json:"presence_penalty,omitempty"`
-	FrequencyPenalty float32  `json:"frequency_penalty,omitempty"`
-	BestOf           int      `json:"best_of,omitempty"`
+	Model            string  `json:"model"`
+	Prompt           any     `json:"prompt,omitempty"`
+	BestOf           int     `json:"best_of,omitempty"`
+	Echo             bool    `json:"echo,omitempty"`
+	FrequencyPenalty float32 `json:"frequency_penalty,omitempty"`
 	// LogitBias is must be a token id string (specified by their token ID in the tokenizer), not a word string.
 	// incorrect: `"logit_bias":{"You": 6}`, correct: `"logit_bias":{"1639": 6}`
 	// refs: https://platform.openai.com/docs/api-reference/completions/create#completions/create-logit_bias
-	LogitBias map[string]int `json:"logit_bias,omitempty"`
-	User      string         `json:"user,omitempty"`
+	LogitBias       map[string]int `json:"logit_bias,omitempty"`
+	LogProbs        int            `json:"logprobs,omitempty"`
+	MaxTokens       int            `json:"max_tokens,omitempty"`
+	N               int            `json:"n,omitempty"`
+	PresencePenalty float32        `json:"presence_penalty,omitempty"`
+	Seed            *int           `json:"seed,omitempty"`
+	Stop            []string       `json:"stop,omitempty"`
+	Stream          bool           `json:"stream,omitempty"`
+	Suffix          string         `json:"suffix,omitempty"`
+	Temperature     float32        `json:"temperature,omitempty"`
+	TopP            float32        `json:"top_p,omitempty"`
+	User            string         `json:"user,omitempty"`
 }
 
 // CompletionChoice represents one of possible completions.
@@ -210,7 +223,12 @@ func (c *Client) CreateCompletion(
 		return
 	}
 
-	req, err := c.newRequest(ctx, http.MethodPost, c.fullURL(urlSuffix, request.Model), withBody(request))
+	req, err := c.newRequest(
+		ctx,
+		http.MethodPost,
+		c.fullURL(urlSuffix, withModel(request.Model)),
+		withBody(request),
+	)
 	if err != nil {
 		return
 	}
